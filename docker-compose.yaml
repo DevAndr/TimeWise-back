@@ -33,7 +33,7 @@ services:
     ports:
       - "3031:3031"
     environment:
-      DATABASE_URL: "postgresql://postgres:GGgb9ds_9mf6_d4jdArdm_tSn_H0@postgres:5445/timewise-db?schema=public"
+      DATABASE_URL: "postgresql://postgres:GGgb9ds_9mf6_d4jdArdm_tSn_H0@postgres:5432/timewise-db?schema=public"
       PORT: 3031
       NODE_ENV: "production"
     networks:

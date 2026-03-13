@@ -14,7 +14,9 @@ COPY package.json package-lock.json ./
 RUN npm install --frozen-lockfile --production
 # generate снова в production стейдже — кладёт в node_modules/.prisma/client
 COPY prisma ./prisma
+COPY prisma.config.ts ./
 RUN npx prisma generate
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/generated ./generated
 EXPOSE 3031
 CMD ["sh", "-c", "npx prisma migrate deploy && node dist/src/main.js"]
