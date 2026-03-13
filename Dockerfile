@@ -10,7 +10,7 @@ RUN npm run build
 
 FROM node:22-alpine AS production
 WORKDIR /app
-COPY package.json yarn.lock ./
+COPY package.json package-lock.json ./
 RUN npm install --frozen-lockfile --production
 # generate снова в production стейдже — кладёт в node_modules/.prisma/client
 COPY prisma ./prisma
