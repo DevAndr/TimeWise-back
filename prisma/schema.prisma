@@ -32,8 +32,7 @@ model Activity {
   apiTokenId String
   apiToken   ApiToken @relation(fields: [apiTokenId], references: [id], onDelete: Cascade)
 
-  @@index([domain])
-  @@index([apiTokenId])
+  @@unique([apiTokenId, domain])
   @@index([startedAt])
   @@map("activities")
 }

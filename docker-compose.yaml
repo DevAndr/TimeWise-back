@@ -24,6 +24,20 @@ services:
     networks:
       - timewise-network
 
+  timewise-back:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy  # Ждем пока PostgreSQL будет готов
+    ports:
+      - "3031:3031"
+    environment:
+      DATABASE_URL: "postgresql://postgres:GGgb9ds_9mf6_d4jdArdm_tSn_H0@postgres:5445/timewise-db?schema=public"
+      PORT: 3031
+      NODE_ENV: "production"
+    networks:
+      - invest-network
 volumes:
   postgres_data:
 
