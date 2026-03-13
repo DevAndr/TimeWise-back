@@ -16,7 +16,5 @@ RUN npm install --frozen-lockfile --production
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/prisma.config.ts ./
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 EXPOSE 3031
 CMD ["sh", "-c", "npx prisma migrate deploy && node dist/src/main.js"]
