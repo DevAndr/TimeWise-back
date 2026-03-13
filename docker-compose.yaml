@@ -37,7 +37,7 @@ services:
       PORT: 3031
       NODE_ENV: "production"
     networks:
-      - invest-network
+      - timewise-network
 volumes:
   postgres_data:
 
