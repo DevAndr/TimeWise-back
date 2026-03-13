@@ -1,5 +1,5 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-import { ApiToken } from '../../generated/prisma/client';
+import { ApiToken } from '@prisma/client';
 
 export const CurrentApiToken = createParamDecorator(
   (_data: unknown, ctx: ExecutionContext): ApiToken => {

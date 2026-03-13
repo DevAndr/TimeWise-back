@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateActivityDto } from './dto/create-activity.dto';
 import { QueryActivityDto } from './dto/query-activity.dto';
-import { Prisma } from '../../generated/prisma/client';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class ActivityService {
@@ -32,9 +32,7 @@ export class ActivityService {
   }
 
   async createBatch(apiTokenId: string, dtos: CreateActivityDto[]) {
-    return Promise.all(
-      dtos.map((dto) => this.create(apiTokenId, dto)),
-    );
+    return Promise.all(dtos.map((dto) => this.create(apiTokenId, dto)));
   }
 
   async findAll(apiTokenId: string, query: QueryActivityDto) {

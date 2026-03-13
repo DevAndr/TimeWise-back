@@ -8,17 +8,13 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiOperation,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ActivityService } from './activity.service';
 import { CreateActivityDto } from './dto/create-activity.dto';
 import { QueryActivityDto } from './dto/query-activity.dto';
 import { ApiTokenGuard } from '../auth/api-token.guard';
 import { CurrentApiToken } from '../auth/api-token.decorator';
-import { ApiToken } from '../../generated/prisma/client';
+import { ApiToken } from '@prisma/client';
 
 @ApiTags('Activities')
 @ApiBearerAuth()
@@ -29,10 +25,7 @@ export class ActivityController {
 
   @Post()
   @ApiOperation({ summary: 'Record a single activity' })
-  create(
-    @CurrentApiToken() token: ApiToken,
-    @Body() dto: CreateActivityDto,
-  ) {
+  create(@CurrentApiToken() token: ApiToken, @Body() dto: CreateActivityDto) {
     return this.activityService.create(token.id, dto);
   }
 
