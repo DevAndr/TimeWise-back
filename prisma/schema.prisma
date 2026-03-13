@@ -1,0 +1,39 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model ApiToken {
+  id        String   @id @default(uuid())
+  name      String
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  activities Activity[]
+
+  @@map("api_tokens")
+}
+
+model Activity {
+  id        String    @id @default(uuid())
+  domain    String
+  url       String?
+  title     String?
+  duration  Int // seconds spent on the site
+  startedAt DateTime
+  endedAt   DateTime?
+  createdAt DateTime  @default(now())
+
+  apiTokenId String
+  apiToken   ApiToken @relation(fields: [apiTokenId], references: [id], onDelete: Cascade)
+
+  @@index([domain])
+  @@index([apiTokenId])
+  @@index([startedAt])
+  @@map("activities")
+}

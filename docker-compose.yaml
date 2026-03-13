@@ -1,0 +1,32 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:17.3-alpine3.21
+    container_name: postgres-timewise
+    ports:
+      - "5445:5432"  # Хост:5440 -> Контейнер:5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "GGgb9ds_9mf6_d4jdArdm_tSn_H0"
+      POSTGRES_DB: "timewise-db"
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=en_US.UTF-8 --lc-ctype=en_US.UTF-8"
+      PGDATA: "/var/lib/postgresql/data/pgdata"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d timewise-db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - timewise-network
+
+volumes:
+  postgres_data:
+
+networks:
+  timewise-network:
+    driver: bridge
