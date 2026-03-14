@@ -14,7 +14,8 @@ model ApiToken {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  activities Activity[]
+  activities    Activity[]
+  appActivities AppActivity[]
 
   @@map("api_tokens")
 }
@@ -35,4 +36,21 @@ model Activity {
   @@unique([apiTokenId, domain])
   @@index([startedAt])
   @@map("activities")
+}
+
+model AppActivity {
+  id          String   @id @default(uuid())
+  appName     String
+  windowTitle String?
+  duration    Int // milliseconds
+  startedAt   DateTime
+  endedAt     DateTime
+  createdAt   DateTime @default(now())
+
+  apiTokenId String
+  apiToken   ApiToken @relation(fields: [apiTokenId], references: [id], onDelete: Cascade)
+
+  @@index([apiTokenId, appName])
+  @@index([startedAt])
+  @@map("app_activities")
 }
