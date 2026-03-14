@@ -16,6 +16,7 @@ model ApiToken {
 
   activities    Activity[]
   appActivities AppActivity[]
+  domainGoals   DomainGoal[]
 
   @@map("api_tokens")
 }
@@ -53,4 +54,19 @@ model AppActivity {
   @@index([apiTokenId, appName])
   @@index([startedAt])
   @@map("app_activities")
+}
+
+model DomainGoal {
+  id             String @id @default(uuid())
+  domain         String
+  dailyGoal      Int    @default(7200) // seconds (default 2 hours)
+  currentProgress Int   @default(0) // seconds spent today
+  date           DateTime @db.Date // the day this progress applies to
+
+  apiTokenId String
+  apiToken   ApiToken @relation(fields: [apiTokenId], references: [id], onDelete: Cascade)
+
+  @@unique([apiTokenId, domain, date])
+  @@index([apiTokenId, domain])
+  @@map("domain_goals")
 }

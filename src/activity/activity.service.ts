@@ -2,14 +2,18 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateActivityDto } from './dto/create-activity.dto';
 import { QueryActivityDto } from './dto/query-activity.dto';
+import { GoalService } from '../goal/goal.service';
 import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class ActivityService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly goalService: GoalService,
+  ) {}
 
   async create(apiTokenId: string, dto: CreateActivityDto) {
-    return this.prisma.activity.create({
+    const activity = await this.prisma.activity.create({
       data: {
         domain: dto.domain,
         url: dto.url,
@@ -20,10 +24,14 @@ export class ActivityService {
         apiTokenId,
       },
     });
+
+    await this.goalService.addProgress(apiTokenId, dto.domain, dto.duration);
+
+    return activity;
   }
 
   async createBatch(apiTokenId: string, dtos: CreateActivityDto[]) {
-    return this.prisma.activity.createMany({
+    const result = await this.prisma.activity.createMany({
       data: dtos.map((dto) => ({
         domain: dto.domain,
         url: dto.url,
@@ -34,6 +42,13 @@ export class ActivityService {
         apiTokenId,
       })),
     });
+
+    await this.goalService.addProgressBatch(
+      apiTokenId,
+      dtos.map((dto) => ({ domain: dto.domain, duration: dto.duration })),
+    );
+
+    return result;
   }
 
   async findAll(apiTokenId: string, query: QueryActivityDto) {
