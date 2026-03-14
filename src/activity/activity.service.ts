@@ -9,11 +9,8 @@ export class ActivityService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(apiTokenId: string, dto: CreateActivityDto) {
-    return this.prisma.activity.upsert({
-      where: {
-        apiTokenId_domain: { apiTokenId, domain: dto.domain },
-      },
-      create: {
+    return this.prisma.activity.create({
+      data: {
         domain: dto.domain,
         url: dto.url,
         title: dto.title,
@@ -22,17 +19,21 @@ export class ActivityService {
         endedAt: dto.endedAt ? new Date(dto.endedAt) : null,
         apiTokenId,
       },
-      update: {
-        duration: { increment: dto.duration },
-        url: dto.url ?? undefined,
-        title: dto.title ?? undefined,
-        endedAt: dto.endedAt ? new Date(dto.endedAt) : undefined,
-      },
     });
   }
 
   async createBatch(apiTokenId: string, dtos: CreateActivityDto[]) {
-    return Promise.all(dtos.map((dto) => this.create(apiTokenId, dto)));
+    return this.prisma.activity.createMany({
+      data: dtos.map((dto) => ({
+        domain: dto.domain,
+        url: dto.url,
+        title: dto.title,
+        duration: dto.duration,
+        startedAt: new Date(dto.startedAt),
+        endedAt: dto.endedAt ? new Date(dto.endedAt) : null,
+        apiTokenId,
+      })),
+    });
   }
 
   async findAll(apiTokenId: string, query: QueryActivityDto) {
