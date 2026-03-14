@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateActivityDto } from './dto/create-activity.dto';
 import { QueryActivityDto } from './dto/query-activity.dto';
 import { GoalService } from '../goal/goal.service';
+import { NotificationGateway } from '../notification/notification.gateway';
 import { Prisma } from '@prisma/client';
 
 @Injectable()
@@ -10,9 +11,31 @@ export class ActivityService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly goalService: GoalService,
+    private readonly notifications: NotificationGateway,
   ) {}
 
+  private async checkNewDomains(apiTokenId: string, domains: string[]) {
+    const unique = [...new Set(domains)];
+
+    const existing = await this.prisma.activity.groupBy({
+      by: ['domain'],
+      where: {
+        apiTokenId,
+        domain: { in: unique },
+      },
+    });
+    const knownDomains = new Set(existing.map((e) => e.domain));
+
+    for (const domain of unique) {
+      if (!knownDomains.has(domain)) {
+        this.notifications.notify(apiTokenId, 'new_domain', { domain });
+      }
+    }
+  }
+
   async create(apiTokenId: string, dto: CreateActivityDto) {
+    await this.checkNewDomains(apiTokenId, [dto.domain]);
+
     const activity = await this.prisma.activity.create({
       data: {
         domain: dto.domain,
@@ -31,6 +54,8 @@ export class ActivityService {
   }
 
   async createBatch(apiTokenId: string, dtos: CreateActivityDto[]) {
+    await this.checkNewDomains(apiTokenId, dtos.map((d) => d.domain));
+
     const result = await this.prisma.activity.createMany({
       data: dtos.map((dto) => ({
         domain: dto.domain,

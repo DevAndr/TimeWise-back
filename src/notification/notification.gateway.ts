@@ -9,6 +9,13 @@ import { Server } from 'ws';
 import { IncomingMessage } from 'http';
 import { PrismaService } from '../prisma/prisma.service';
 
+export type NotificationEvent =
+  | 'goal_reached'
+  | 'goal_warning'
+  | 'goal_halfway'
+  | 'goal_exceeded'
+  | 'new_domain';
+
 interface AuthenticatedClient {
   socket: import('ws').WebSocket;
   apiTokenId: string;
@@ -51,14 +58,8 @@ export class NotificationGateway
     this.clients = this.clients.filter((c) => c.socket !== socket);
   }
 
-  notifyGoalReached(
-    apiTokenId: string,
-    payload: { domain: string; dailyGoal: number; currentProgress: number },
-  ) {
-    const message = JSON.stringify({
-      event: 'goal_reached',
-      data: payload,
-    });
+  notify(apiTokenId: string, event: NotificationEvent, data: Record<string, any>) {
+    const message = JSON.stringify({ event, data });
 
     for (const client of this.clients) {
       if (client.apiTokenId === apiTokenId && client.socket.readyState === 1) {

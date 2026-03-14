@@ -5,6 +5,10 @@ import { QueryGoalDto } from './dto/query-goal.dto';
 import { NotificationGateway } from '../notification/notification.gateway';
 import { Prisma } from '@prisma/client';
 
+const HALFWAY_THRESHOLD = 0.5;
+const WARNING_THRESHOLD = 0.8;
+const EXCEEDED_THRESHOLD = 1.5;
+
 @Injectable()
 export class GoalService {
   constructor(
@@ -15,6 +19,29 @@ export class GoalService {
   private toDateOnly(dateStr?: string): Date {
     const d = dateStr ? new Date(dateStr) : new Date();
     return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  }
+
+  private checkThresholds(
+    apiTokenId: string,
+    domain: string,
+    previousProgress: number,
+    currentProgress: number,
+    dailyGoal: number,
+  ) {
+    const payload = { domain, dailyGoal, currentProgress };
+
+    const thresholds: [number, Parameters<NotificationGateway['notify']>[1]][] = [
+      [dailyGoal * HALFWAY_THRESHOLD, 'goal_halfway'],
+      [dailyGoal * WARNING_THRESHOLD, 'goal_warning'],
+      [dailyGoal, 'goal_reached'],
+      [dailyGoal * EXCEEDED_THRESHOLD, 'goal_exceeded'],
+    ];
+
+    for (const [threshold, event] of thresholds) {
+      if (previousProgress < threshold && currentProgress >= threshold) {
+        this.notifications.notify(apiTokenId, event, payload);
+      }
+    }
   }
 
   async upsertGoal(apiTokenId: string, dto: UpsertGoalDto) {
@@ -75,13 +102,7 @@ export class GoalService {
       },
     });
 
-    if (previousProgress < dailyGoal && goal.currentProgress >= dailyGoal) {
-      this.notifications.notifyGoalReached(apiTokenId, {
-        domain,
-        dailyGoal: goal.dailyGoal,
-        currentProgress: goal.currentProgress,
-      });
-    }
+    this.checkThresholds(apiTokenId, domain, previousProgress, goal.currentProgress, dailyGoal);
   }
 
   async addProgressBatch(apiTokenId: string, entries: { domain: string; duration: number }[]) {
@@ -123,13 +144,7 @@ export class GoalService {
       const previousProgress = existing?.currentProgress ?? 0;
       const dailyGoal = existing?.dailyGoal ?? 7200;
 
-      if (previousProgress < dailyGoal && goal.currentProgress >= dailyGoal) {
-        this.notifications.notifyGoalReached(apiTokenId, {
-          domain: goal.domain,
-          dailyGoal: goal.dailyGoal,
-          currentProgress: goal.currentProgress,
-        });
-      }
+      this.checkThresholds(apiTokenId, goal.domain, previousProgress, goal.currentProgress, dailyGoal);
     }
   }
 }
